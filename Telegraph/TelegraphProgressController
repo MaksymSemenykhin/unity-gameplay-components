@@ -1,0 +1,315 @@
+using System;
+using System.Collections;
+using UnityEngine;
+
+public enum TelegraphPhase
+{
+    Idle = 0,
+    Telegraphing = 1,
+    Active = 2,
+    Finishing = 3
+}
+
+public class TelegraphProgressController : MonoBehaviour
+{
+    [Header("Defaults (can be overridden in Play)")]
+    [Min(0f)] public float defaultTelegraphDuration = 2f;
+    [Min(0f)] public float defaultActiveDuration = 1f;
+    [Min(0f)] public float defaultFinishFadeDuration = 1f;
+
+    [Header("Auto Play")]
+    public bool autoPlayOnStart = false;
+    public bool autoPlayOnEnable = false;
+    [Min(0f)] public float autoPlayDelay = 0f;
+
+    // ----------------------------
+    // Public state
+    // ----------------------------
+    public TelegraphPhase Phase { get; private set; } = TelegraphPhase.Idle;
+    public bool IsPlaying => Phase != TelegraphPhase.Idle;
+    public float TelegraphProgress01 { get; private set; } = 0f;
+
+    // ----------------------------
+    // Events
+    // ----------------------------
+    public event Action OnTelegraphStart;
+    public event Action<float> OnTelegraphProgress; // 0..1
+    public event Action OnTelegraphComplete;
+
+    public event Action OnActiveStart;
+    public event Action OnActiveEnd;
+
+    public event Action<TelegraphPhase> OnCancelled;
+    public event Action OnFinished;
+
+    // ----------------------------
+    // Internals
+    // ----------------------------
+    private Coroutine _routine;
+    private int _runId = 0;
+    private bool _startedOnce = false;
+
+    // =====================================================================
+    // Unity lifecycle
+    // =====================================================================
+
+    private void Start()
+    {
+        if (!autoPlayOnStart) return;
+        // if (_startedOnce) return;
+        //
+        // _startedOnce = true;
+        StartAutoPlay();
+    }
+
+    private void OnEnable()
+    {
+        if (!autoPlayOnEnable) return;
+
+        StartAutoPlay();
+    }
+
+    private void OnDisable()
+    {
+        // Important: if the object gets disabled (pool), stop everything cleanly.
+        // We avoid calling OnFinished here to not confuse listeners; only OnCancelled.
+        if (!IsPlaying) return;
+
+        Cancel(fadeOut: false);
+    }
+
+    private void StartAutoPlay()
+    {
+        // Restart if already playing
+        if (IsPlaying)
+        {
+            Cancel(fadeOut: false);
+        }
+
+        if (autoPlayDelay <= 0f)
+        {
+            Play();
+            return;
+        }
+
+        _runId++;
+        StartCoroutine(AutoPlayDelayed(_runId, autoPlayDelay));
+    }
+
+    private IEnumerator AutoPlayDelayed(int runId, float delay)
+    {
+        float t = 0f;
+
+        while (t < delay)
+        {
+            if (runId != _runId) yield break;
+
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        if (runId != _runId) yield break;
+
+        Play();
+    }
+
+    // =====================================================================
+    // API
+    // =====================================================================
+
+    public void Play(float? telegraphDuration = null, float? activeDuration = null, float? finishFadeDuration = null)
+    {
+        float tTelegraph = Mathf.Max(0f, telegraphDuration ?? defaultTelegraphDuration);
+        float tActive = Mathf.Max(0f, activeDuration ?? defaultActiveDuration);
+        float tFinish = Mathf.Max(0f, finishFadeDuration ?? defaultFinishFadeDuration);
+
+        if (_routine != null)
+        {
+            Cancel(fadeOut: false);
+        }
+
+        _runId++;
+        _routine = StartCoroutine(RunSequence(_runId, tTelegraph, tActive, tFinish));
+    }
+
+    public void Cancel(bool fadeOut = true)
+    {
+        if (_routine == null && Phase == TelegraphPhase.Idle)
+        {
+            return;
+        }
+
+        TelegraphPhase cancelledPhase = Phase;
+
+        if (_routine != null)
+        {
+            StopCoroutine(_routine);
+            _routine = null;
+        }
+
+        _runId++;
+
+        Phase = TelegraphPhase.Idle;
+        TelegraphProgress01 = 0f;
+
+        OnCancelled?.Invoke(cancelledPhase);
+        OnFinished?.Invoke();
+    }
+
+    public void ForceComplete(float? finishFadeDuration = null)
+    {
+        float tFinish = Mathf.Max(0f, finishFadeDuration ?? defaultFinishFadeDuration);
+
+        if (Phase == TelegraphPhase.Idle)
+        {
+            return;
+        }
+
+        if (Phase == TelegraphPhase.Active)
+        {
+            if (_routine != null)
+            {
+                StopCoroutine(_routine);
+                _routine = null;
+            }
+
+            _runId++;
+            _routine = StartCoroutine(FinishOnly(_runId, tFinish));
+            return;
+        }
+
+        if (Phase == TelegraphPhase.Telegraphing)
+        {
+            if (_routine != null)
+            {
+                StopCoroutine(_routine);
+                _routine = null;
+            }
+
+            _runId++;
+            _routine = StartCoroutine(InstantCompleteFromTelegraph(_runId, tFinish));
+        }
+    }
+
+    // =====================================================================
+    // Core coroutine
+    // =====================================================================
+
+    private IEnumerator RunSequence(int runId, float telegraphDuration, float activeDuration, float finishFadeDuration)
+    {
+        // Telegraphing
+        Phase = TelegraphPhase.Telegraphing;
+        TelegraphProgress01 = 0f;
+
+        OnTelegraphStart?.Invoke();
+        OnTelegraphProgress?.Invoke(0f);
+
+        if (telegraphDuration > 0f)
+        {
+            float t = 0f;
+
+            while (t < telegraphDuration)
+            {
+                if (runId != _runId) yield break;
+
+                t += Time.deltaTime;
+                TelegraphProgress01 = Mathf.Clamp01(t / telegraphDuration);
+
+                OnTelegraphProgress?.Invoke(TelegraphProgress01);
+
+                yield return null;
+            }
+        }
+
+        TelegraphProgress01 = 1f;
+        OnTelegraphProgress?.Invoke(1f);
+        OnTelegraphComplete?.Invoke();
+
+        // Active
+        Phase = TelegraphPhase.Active;
+        OnActiveStart?.Invoke();
+
+        if (activeDuration > 0f)
+        {
+            float t = 0f;
+
+            while (t < activeDuration)
+            {
+                if (runId != _runId) yield break;
+
+                t += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        OnActiveEnd?.Invoke();
+
+        // Finish
+        Phase = TelegraphPhase.Finishing;
+
+        if (finishFadeDuration > 0f)
+        {
+            float t = 0f;
+
+            while (t < finishFadeDuration)
+            {
+                if (runId != _runId) yield break;
+
+                t += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        // Reset
+        Phase = TelegraphPhase.Idle;
+        TelegraphProgress01 = 0f;
+
+        _routine = null;
+        OnFinished?.Invoke();
+    }
+
+    private IEnumerator InstantCompleteFromTelegraph(int runId, float finishFadeDuration)
+    {
+        Phase = TelegraphPhase.Telegraphing;
+        TelegraphProgress01 = 1f;
+
+        OnTelegraphProgress?.Invoke(1f);
+        OnTelegraphComplete?.Invoke();
+
+        Phase = TelegraphPhase.Active;
+        OnActiveStart?.Invoke();
+        OnActiveEnd?.Invoke();
+
+        yield return Finish(runId, finishFadeDuration);
+    }
+
+    private IEnumerator FinishOnly(int runId, float finishFadeDuration)
+    {
+        OnActiveEnd?.Invoke();
+        yield return Finish(runId, finishFadeDuration);
+    }
+
+    private IEnumerator Finish(int runId, float finishFadeDuration)
+    {
+        Phase = TelegraphPhase.Finishing;
+
+        if (finishFadeDuration > 0f)
+        {
+            float t = 0f;
+
+            while (t < finishFadeDuration)
+            {
+                if (runId != _runId) yield break;
+
+                t += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        Phase = TelegraphPhase.Idle;
+        TelegraphProgress01 = 0f;
+
+        _routine = null;
+        OnFinished?.Invoke();
+    }
+}
