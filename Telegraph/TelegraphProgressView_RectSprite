@@ -1,0 +1,313 @@
+using UnityEngine;
+
+/// <summary>
+/// Visual listener for TelegraphProgressController:
+/// - Shows frame + fill
+/// - Scales fill from center based on progress 0..1
+/// - Switches colors on Active
+/// - Hides on Finish/Cancel
+/// </summary>
+public class TelegraphProgressView_RectSprite : MonoBehaviour
+{
+    [Header("Refs")]
+    [SerializeField] private TelegraphProgressController controller;
+    [SerializeField] private SpriteRenderer frameRenderer;
+    [SerializeField] private SpriteRenderer fillRenderer;
+
+    [Header("Sizing")]
+    [Tooltip("Final size of the telegraph zone in local space (world scale).")]
+    public Vector2 finalSize = new Vector2(2f, 1f);
+
+    [Tooltip("Fill starts from this size and grows to finalSize.")]
+    public Vector2 startSize = new Vector2(0.15f, 0.15f);
+
+    [Header("Colors")]
+    public Color telegraphColor = Color.white;
+    public Color activeColor = Color.red;
+    [Range(0f, 1f)] public float frameAlpha = 1f;
+    [Range(0f, 1f)] public float fillAlpha = 0.6f;
+
+    [Header("Behavior")]
+    public bool hideOnStart = true;
+    public bool hideFillWhenIdle = false;
+
+    [Tooltip("If true, will animate fade out when finished/cancelled.")]
+    public bool fadeOut = true;
+
+    [Min(0f)] public float fadeOutDuration = 0.15f;
+
+    // Internals
+    private Vector3 _frameBaseScale;
+    private Vector3 _fillBaseScale;
+
+    private float _currentFrameAlpha;
+    private float _currentFillAlpha;
+
+    private int _fadeRunId = 0;
+
+    private void Reset()
+    {
+        controller = GetComponent<TelegraphProgressController>();
+    }
+
+    private void Awake()
+    {
+        if (controller == null)
+        {
+            controller = GetComponent<TelegraphProgressController>();
+        }
+
+        CacheBaseScales();
+
+        _currentFrameAlpha = frameAlpha;
+        _currentFillAlpha = fillAlpha;
+
+        if (hideOnStart)
+        {
+            SetVisible(false);
+        }
+        else
+        {
+            ApplyColors(telegraphColor);
+            SetFillProgress(0f);
+            SetVisible(true);
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (controller == null) return;
+
+        controller.OnTelegraphStart += HandleTelegraphStart;
+        controller.OnTelegraphProgress += HandleTelegraphProgress;
+        controller.OnTelegraphComplete += HandleTelegraphComplete;
+
+        controller.OnActiveStart += HandleActiveStart;
+        controller.OnActiveEnd += HandleActiveEnd;
+
+        controller.OnCancelled += HandleCancelled;
+        controller.OnFinished += HandleFinished;
+    }
+
+    private void OnDisable()
+    {
+        if (controller == null) return;
+
+        controller.OnTelegraphStart -= HandleTelegraphStart;
+        controller.OnTelegraphProgress -= HandleTelegraphProgress;
+        controller.OnTelegraphComplete -= HandleTelegraphComplete;
+
+        controller.OnActiveStart -= HandleActiveStart;
+        controller.OnActiveEnd -= HandleActiveEnd;
+
+        controller.OnCancelled -= HandleCancelled;
+        controller.OnFinished -= HandleFinished;
+    }
+
+    // =====================================================================
+    // Event handlers
+    // =====================================================================
+
+    private void HandleTelegraphStart()
+    {
+        StopFade();
+
+        ApplyColors(telegraphColor);
+        SetFillProgress(0f);
+        SetVisible(true);
+    }
+
+    private void HandleTelegraphProgress(float p01)
+    {
+        SetFillProgress(p01);
+    }
+
+    private void HandleTelegraphComplete()
+    {
+        SetFillProgress(1f);
+    }
+
+    private void HandleActiveStart()
+    {
+        ApplyColors(activeColor);
+        SetVisible(true);
+    }
+
+    private void HandleActiveEnd()
+    {
+        // Keep visible during finish fade (controller will call OnFinished)
+    }
+
+    private void HandleCancelled(TelegraphPhase phase)
+    {
+        // If cancelled while active, visuals should disappear too.
+        if (fadeOut && fadeOutDuration > 0f)
+        {
+            StartFadeOut();
+        }
+        else
+        {
+            SetVisible(false);
+        }
+    }
+
+    private void HandleFinished()
+    {
+        if (fadeOut && fadeOutDuration > 0f)
+        {
+            StartFadeOut();
+        }
+        else
+        {
+            SetVisible(false);
+        }
+    }
+
+    // =====================================================================
+    // Visual logic
+    // =====================================================================
+
+    private void CacheBaseScales()
+    {
+        // Base scale of sprites (so you can tweak child transform scale in prefab)
+        if (frameRenderer != null)
+        {
+            _frameBaseScale = frameRenderer.transform.localScale;
+        }
+
+        if (fillRenderer != null)
+        {
+            _fillBaseScale = fillRenderer.transform.localScale;
+        }
+    }
+
+    private void SetVisible(bool visible)
+    {
+        if (frameRenderer != null)
+        {
+            frameRenderer.enabled = visible;
+        }
+
+        if (fillRenderer != null)
+        {
+            if (!visible)
+            {
+                fillRenderer.enabled = false;
+            }
+            else
+            {
+                fillRenderer.enabled = !hideFillWhenIdle;
+            }
+        }
+    }
+
+    private void ApplyColors(Color baseColor)
+    {
+        if (frameRenderer != null)
+        {
+            Color c = baseColor;
+            c.a = _currentFrameAlpha;
+            frameRenderer.color = c;
+        }
+
+        if (fillRenderer != null)
+        {
+            Color c = baseColor;
+            c.a = _currentFillAlpha;
+            fillRenderer.color = c;
+        }
+    }
+
+    private void SetFillProgress(float p01)
+    {
+        p01 = Mathf.Clamp01(p01);
+
+        // Size interpolation in local space:
+        Vector2 size = Vector2.Lerp(startSize, finalSize, p01);
+
+        // We scale the Fill child assuming its sprite is a 1x1 quad-like sprite.
+        // If your sprite is different, you can instead use DrawMode Sliced with size.
+        if (fillRenderer != null)
+        {
+            fillRenderer.enabled = true;
+
+            // X/Y scale from size, Z stays.
+            fillRenderer.transform.localScale = new Vector3(
+                _fillBaseScale.x * size.x,
+                _fillBaseScale.y * size.y,
+                _fillBaseScale.z
+            );
+        }
+
+        if (frameRenderer != null)
+        {
+            // Frame matches final size (static)
+            frameRenderer.transform.localScale = new Vector3(
+                _frameBaseScale.x * finalSize.x,
+                _frameBaseScale.y * finalSize.y,
+                _frameBaseScale.z
+            );
+        }
+    }
+
+    // =====================================================================
+    // Fade out
+    // =====================================================================
+
+    private void StartFadeOut()
+    {
+        StopFade();
+        _fadeRunId++;
+        StartCoroutine(FadeOutRoutine(_fadeRunId));
+    }
+
+    private void StopFade()
+    {
+        // Cancels any running fade coroutine by incrementing id
+        _fadeRunId++;
+        _currentFrameAlpha = frameAlpha;
+        _currentFillAlpha = fillAlpha;
+    }
+
+    private System.Collections.IEnumerator FadeOutRoutine(int id)
+    {
+        float t = 0f;
+
+        float startFrameA = _currentFrameAlpha;
+        float startFillA = _currentFillAlpha;
+
+        while (t < fadeOutDuration)
+        {
+            if (id != _fadeRunId) yield break;
+
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / fadeOutDuration);
+
+            _currentFrameAlpha = Mathf.Lerp(startFrameA, 0f, k);
+            _currentFillAlpha = Mathf.Lerp(startFillA, 0f, k);
+
+            // Re-apply current color keeping RGB from current renderer (so active stays red)
+            if (frameRenderer != null)
+            {
+                Color c = frameRenderer.color;
+                c.a = _currentFrameAlpha;
+                frameRenderer.color = c;
+            }
+
+            if (fillRenderer != null)
+            {
+                Color c = fillRenderer.color;
+                c.a = _currentFillAlpha;
+                fillRenderer.color = c;
+            }
+
+            yield return null;
+        }
+
+        SetVisible(false);
+
+        // Restore alpha for next reuse
+        _currentFrameAlpha = frameAlpha;
+        _currentFillAlpha = fillAlpha;
+    }
+}
