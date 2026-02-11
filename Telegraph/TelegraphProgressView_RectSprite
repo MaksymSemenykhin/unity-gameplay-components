@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -9,26 +10,23 @@ using UnityEngine;
 /// </summary>
 public class TelegraphProgressView_RectSprite : MonoBehaviour
 {
-    [Header("Refs")]
-    [SerializeField] private TelegraphProgressController controller;
+    [Header("Refs")] [SerializeField] private TelegraphProgressController controller;
     [SerializeField] private SpriteRenderer frameRenderer;
     [SerializeField] private SpriteRenderer fillRenderer;
 
-    [Header("Sizing")]
-    [Tooltip("Final size of the telegraph zone in local space (world scale).")]
+    [Header("Sizing")] [Tooltip("Final size of the telegraph zone in local space (world scale).")]
     public Vector2 finalSize = new Vector2(2f, 1f);
 
     [Tooltip("Fill starts from this size and grows to finalSize.")]
     public Vector2 startSize = new Vector2(0.15f, 0.15f);
 
-    [Header("Colors")]
-    public Color telegraphColor = Color.white;
+    [Header("Colors")] public Color telegraphColor = Color.white;
     public Color activeColor = Color.red;
+    public Color reactionColor = Color.green;
     [Range(0f, 1f)] public float frameAlpha = 1f;
     [Range(0f, 1f)] public float fillAlpha = 0.6f;
 
-    [Header("Behavior")]
-    public bool hideOnStart = true;
+    [Header("Behavior")] public bool hideOnStart = true;
     public bool hideFillWhenIdle = false;
 
     [Tooltip("If true, will animate fade out when finished/cancelled.")]
@@ -44,6 +42,7 @@ public class TelegraphProgressView_RectSprite : MonoBehaviour
     private float _currentFillAlpha;
 
     private int _fadeRunId = 0;
+
 
     private void Reset()
     {
@@ -81,6 +80,8 @@ public class TelegraphProgressView_RectSprite : MonoBehaviour
         controller.OnTelegraphStart += HandleTelegraphStart;
         controller.OnTelegraphProgress += HandleTelegraphProgress;
         controller.OnTelegraphComplete += HandleTelegraphComplete;
+        controller.OnReactionWindowStart += HandleReactionProgress;
+        controller.OnReactionWindowEnd += HandleReactionComplete;
 
         controller.OnActiveStart += HandleActiveStart;
         controller.OnActiveEnd += HandleActiveEnd;
@@ -126,6 +127,17 @@ public class TelegraphProgressView_RectSprite : MonoBehaviour
     {
         SetFillProgress(1f);
     }
+
+    private void HandleReactionProgress()
+    {
+        ApplyColors(reactionColor);
+    }
+
+    private void HandleReactionComplete()
+    {
+        ApplyColors(telegraphColor);
+    }
+
 
     private void HandleActiveStart()
     {
