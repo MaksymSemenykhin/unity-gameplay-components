@@ -130,12 +130,14 @@ public class LocationRandomizer : MonoBehaviour, MMEventListener<CorgiEngineEven
     private List<(GameObject prefab, Vector2 position)> CollectFrom(IReadOnlyList<LocationRandomizerConfig.CaveEntry> entries)
     {
         var list = new List<(GameObject prefab, Vector2 position)>();
+        var seen = new HashSet<GameObject>();
         int index = 0;
         for (int i = 0; i < entries.Count; i++)
         {
             var entry = entries[i];
             if (entry.prefab == null) continue;
             if (Random.value > entry.spawnChance) continue;
+            if (!seen.Add(entry.prefab)) continue; // already added, keep rooms unique
             list.Add((entry.prefab, firstSpawnPosition + spawnStepPerCave * index));
             index++;
         }
@@ -145,11 +147,13 @@ public class LocationRandomizer : MonoBehaviour, MMEventListener<CorgiEngineEven
     private List<(GameObject prefab, Vector2 position)> CollectFromLocal()
     {
         var list = new List<(GameObject prefab, Vector2 position)>();
+        var seen = new HashSet<GameObject>();
         int index = 0;
         foreach (var entry in caveEntries)
         {
             if (entry?.prefab == null) continue;
             if (Random.value > entry.spawnChance) continue;
+            if (!seen.Add(entry.prefab)) continue; // already added, keep rooms unique
             list.Add((entry.prefab, firstSpawnPosition + spawnStepPerCave * index));
             index++;
         }
