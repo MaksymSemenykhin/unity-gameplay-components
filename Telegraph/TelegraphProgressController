@@ -242,9 +242,6 @@ public class TelegraphProgressController : MonoBehaviour
 
                 if (reactionWindowEnabled)
                 {
-                    Debug.Log(ReactionPhase);
-                    Debug.Log(TelegraphProgress01);
-                    Debug.Log(reactionStartAtProgress01);
                     // Open at ~70%
                     if (ReactionPhase != TelegraphPhase.Active && TelegraphProgress01 >= reactionStartAtProgress01)
                     {

@@ -97,6 +97,8 @@ public class TelegraphProgressView_RectSprite : MonoBehaviour
         controller.OnTelegraphStart -= HandleTelegraphStart;
         controller.OnTelegraphProgress -= HandleTelegraphProgress;
         controller.OnTelegraphComplete -= HandleTelegraphComplete;
+        controller.OnReactionWindowStart -= HandleReactionProgress;
+        controller.OnReactionWindowEnd -= HandleReactionComplete;
 
         controller.OnActiveStart -= HandleActiveStart;
         controller.OnActiveEnd -= HandleActiveEnd;

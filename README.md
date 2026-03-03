@@ -1,19 +1,53 @@
-# Unity Gameplay Core (Corgi Engine)
+# Unity Gameplay Components (Corgi Engine)
 
-A collection of modular, reusable gameplay components designed primarily for
-**Unity projects using the Corgi Engine**.
+A collection of modular, reusable gameplay components for **Unity** projects using **[Corgi Engine](https://corgi-engine.moremountains.com/)**.
 
-This repository contains systems extracted from real game development,
-focused on  behaviors in Corgi-based games.
+Components are extracted from real game development and tailored to typical scenarios in Corgi Engine–based games.
+
+---
+
+## Requirements
+
+- **Unity** (version compatible with your Corgi Engine release)
+- **Corgi Engine** (MoreMountains) — installed in the project
+
+---
+
+## Repository structure
+
+```
+├── Character/              # Character components
+│   ├── OneWayPlatformLandingFix.cs
+│   └── Abilities/
+│       └── AbilityLedgeGrab2D.cs
+├── Telegraph/              # Attack/ability telegraph system
+│   ├── TelegraphProgressController
+│   ├── TelegraphProgressView_RectSprite
+│   └── README.md
+├── LICENSE
+└── README.md
+```
 
 ---
 
 ## Included systems
 
-### Telegraph System
-A flexible telegraphing solution for abilities and attacks:
-- Progress-based telegraph visualization
-- Interrupt / cancel support
-- Completion and post-cast states
-- Designed to listen to ability or AI events
+### Character
 
+- **OneWayPlatformLandingFix** — Fixes unrealistic upward speed when transitioning from a slope onto a one-way platform (prevents the character from “flying” at the junction). Attach to an object with `CorgiController`; spike threshold and clamp speed are configurable in the Inspector.
+- **AbilityLedgeGrab2D** — **Ledge grab** ability: detects wall edge, hang, climb on W/Up. Configurable layers, raycast distances, offsets, cooldown, and options (e.g. only when falling, ignore wall under feet). Add via menu: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
+
+### Telegraph System
+
+**Telegraphing** for attacks and abilities:
+
+- **TelegraphProgressController** — Logic: phases (Idle → Telegraphing → Active → Finishing), progress 0…1, interrupt/cancel, optional reaction window with events.
+- **TelegraphProgressView_RectSprite** — Visualization: frame and fill (SpriteRenderer), scale by progress, color changes (telegraph / reaction / active), hide and fade out on finish.
+
+See [Telegraph/README.md](Telegraph/README.md) for details.
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE).
