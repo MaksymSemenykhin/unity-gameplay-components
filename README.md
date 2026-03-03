@@ -40,6 +40,7 @@ Components are extracted from real game development and tailored to typical scen
 
 - **OneWayPlatformLandingFix** — Fixes unrealistic upward speed when transitioning from a slope onto a one-way platform (prevents the character from “flying” at the junction). Attach to an object with `CorgiController`; spike threshold and clamp speed are configurable in the Inspector.
 - **AbilityLedgeGrab2D** — **Ledge grab** ability: detects wall edge, hang, climb on W/Up. Configurable layers, raycast distances, offsets, cooldown, and options (e.g. only when falling, ignore wall under feet). Add via menu: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
+- **AbilityDownStrike** — **Downward strike** ability: in the air, trigger a strike below (key or stick down). On hit: damage to the target and bounce up. Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
 
 ### Location Randomizer
 
