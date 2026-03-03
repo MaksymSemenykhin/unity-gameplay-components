@@ -20,6 +20,10 @@ Components are extracted from real game development and tailored to typical scen
 │   ├── OneWayPlatformLandingFix.cs
 │   └── Abilities/
 │       └── AbilityLedgeGrab2D.cs
+├── Location/               # Level location randomization (loot caves)
+│   ├── LocationRandomizer.cs
+│   ├── LocationRandomizerConfig.cs
+│   └── README.md
 ├── Telegraph/              # Attack/ability telegraph system
 │   ├── TelegraphProgressController
 │   ├── TelegraphProgressView_RectSprite
@@ -36,6 +40,10 @@ Components are extracted from real game development and tailored to typical scen
 
 - **OneWayPlatformLandingFix** — Fixes unrealistic upward speed when transitioning from a slope onto a one-way platform (prevents the character from “flying” at the junction). Attach to an object with `CorgiController`; spike threshold and clamp speed are configurable in the Inspector.
 - **AbilityLedgeGrab2D** — **Ledge grab** ability: detects wall edge, hang, climb on W/Up. Configurable layers, raycast distances, offsets, cooldown, and options (e.g. only when falling, ignore wall under feet). Add via menu: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
+
+### Location Randomizer
+
+**Random sub-locations at level load:** loot caves (or other locations) are spawned from prefabs outside the main map. Spawn chance is set **per prefab** in the Inspector. See [Location/README.md](Location/README.md).
 
 ### Telegraph System
 
