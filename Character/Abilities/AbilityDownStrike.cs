@@ -1,28 +1,29 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using MoreMountains.CorgiEngine;
 
 /// <summary>
-/// Downward strike ability: in the air, the player triggers a strike below (key or stick down).
-/// Spawns a real hitbox zone in the scene, waits a few frames so visuals can render, then
-/// applies damage to all targets in the zone (each Health once) and applies bounce once to avoid duplicating the effect.
+/// Downward strike ability: in the air, trigger a strike below by pressing the strike button together with Down.
+/// Uses StrikeZoneRunner for shared zone/delay/resolve logic; applies bounce once on any hit.
 /// </summary>
 [AddComponentMenu("Corgi Engine/Character/Abilities/Ability Down Strike")]
 public class AbilityDownStrike : CharacterAbility
 {
     [Header("Input")]
-    [Tooltip("Key to trigger the downward strike (e.g. DownArrow or S).")]
-    public KeyCode DownStrikeKey = KeyCode.S;
-    [Tooltip("Also trigger when movement stick is pushed down (PrimaryMovement.y below this). One trigger per press.")]
+    [Tooltip("Key that triggers the strike (e.g. Attack / J). Strike only fires when this is pressed together with Down.")]
+    public KeyCode StrikeButton = KeyCode.J;
+    [Tooltip("Key that must be held for Down (e.g. S or DownArrow).")]
+    public KeyCode DownKey = KeyCode.S;
+    [Tooltip("When using stick: PrimaryMovement.y below this counts as Down held.")]
     public float MovementDownThreshold = -0.5f;
 
     [Header("Hitbox zone")]
     [Tooltip("Layers that can be hit (e.g. Enemies).")]
     public LayerMask StrikeableLayers;
+    [Tooltip("Prefab for the strike zone (must have BoxCollider2D). If set, zone shape/size/visuals come from the prefab; otherwise a procedural box is used with Zone Size.")]
+    public GameObject ZonePrefab;
     [Tooltip("Offset from character origin where the strike zone is spawned (below the character).")]
     public Vector2 ZoneOffset = new Vector2(0f, -0.5f);
-    [Tooltip("Size of the strike zone (hitbox). You can change this to shape the hitbox.")]
+    [Tooltip("Size of the strike zone when Zone Prefab is not set. Ignored when using a prefab.")]
     public Vector2 ZoneSize = new Vector2(0.7f, 0.5f);
 
     [Header("Timing")]
@@ -34,7 +35,7 @@ public class AbilityDownStrike : CharacterAbility
     public float DamageAmount = 10f;
     [Tooltip("Invincibility duration (seconds) given to the target after damage.")]
     public float TargetInvincibilityDuration = 0.5f;
-    [Tooltip("Upward force applied to the character on successful hit.")]
+    [Tooltip("Upward force applied to the character on successful hit (once, even with multiple targets).")]
     public float BounceForce = 12f;
 
     [Header("Cooldown")]
@@ -42,7 +43,6 @@ public class AbilityDownStrike : CharacterAbility
     public float StrikeCooldown = 0.3f;
 
     private float _lastStrikeTime = -999f;
-    private bool _wasMovementDown;
     private bool _strikeInProgress;
 
     public override void ProcessAbility()
@@ -54,83 +54,49 @@ public class AbilityDownStrike : CharacterAbility
         if (Time.time < _lastStrikeTime + StrikeCooldown) return;
         if (!DownStrikeInput()) return;
 
-        StartCoroutine(StrikeRoutine());
-    }
-
-    /// <summary>
-    /// Spawns hitbox zone, waits DelayFrames so it can render, then resolves hits and applies damage + single bounce.
-    /// </summary>
-    private IEnumerator StrikeRoutine()
-    {
         _strikeInProgress = true;
         _lastStrikeTime = Time.time;
-
         Vector2 zoneCenter = (Vector2)transform.position + ZoneOffset;
-        GameObject zone = CreateStrikeZone(zoneCenter);
 
-        for (int i = 0; i < DelayFrames; i++)
-            yield return null;
+        StrikeZoneRunner.Run(
+            this,
+            zoneCenter,
+            ZoneSize,
+            StrikeableLayers,
+            DelayFrames,
+            DamageAmount,
+            TargetInvincibilityDuration,
+            gameObject,
+            Vector3.down,
+            OnStrikeResolved,
+            ZonePrefab);
+    }
 
-        Collider2D[] hits = Physics2D.OverlapBoxAll(zoneCenter, ZoneSize, 0f, StrikeableLayers);
-        if (zone != null) Destroy(zone);
-
-        bool anyHit = false;
-        var damaged = new HashSet<Health>();
-        foreach (Collider2D col in hits)
-        {
-            if (col == null) continue;
-            Health health = col.GetComponent<Health>();
-            if (health == null) health = col.GetComponentInParent<Health>();
-            if (health == null || !damaged.Add(health) || !health.CanTakeDamageThisFrame) continue;
-            health.Damage(DamageAmount, gameObject, TargetInvincibilityDuration, TargetInvincibilityDuration, Vector3.up);
-            anyHit = true;
-        }
-
+    private void OnStrikeResolved(bool anyHit)
+    {
         if (anyHit)
             _controller.SetVerticalForce(BounceForce);
-
         _strikeInProgress = false;
     }
 
     /// <summary>
-    /// Creates a temporary GameObject with a trigger BoxCollider2D so the hitbox exists in the scene and can be shaped via ZoneSize.
-    /// </summary>
-    private GameObject CreateStrikeZone(Vector2 center)
-    {
-        var go = new GameObject("DownStrikeZone");
-        go.transform.position = center;
-        go.transform.SetParent(transform.parent);
-        var box = go.AddComponent<BoxCollider2D>();
-        box.isTrigger = true;
-        box.size = ZoneSize;
-        box.enabled = true;
-        return go;
-    }
-
-    /// <summary>
-    /// True when the player just pressed the strike key or pushed the stick down (edge trigger for stick so it doesn't repeat every frame).
+    /// True when the player just pressed the strike button while also holding Down (key or stick).
     /// </summary>
     private bool DownStrikeInput()
     {
-        if (DownStrikeKey != KeyCode.None && Input.GetKeyDown(DownStrikeKey))
-            return true;
-        bool isDown = _inputManager.PrimaryMovement.y < MovementDownThreshold;
-        if (isDown && !_wasMovementDown)
-        {
-            _wasMovementDown = true;
-            return true;
-        }
-        if (!isDown) _wasMovementDown = false;
-        return false;
+        bool strikePressed = StrikeButton != KeyCode.None && Input.GetKeyDown(StrikeButton);
+        if (!strikePressed) return false;
+
+        bool downHeld = (DownKey != KeyCode.None && Input.GetKey(DownKey))
+                       || _inputManager.PrimaryMovement.y < MovementDownThreshold;
+        return downHeld;
     }
 
-    /// <summary>
-    /// Draws the strike zone in the Scene view when the component is selected.
-    /// </summary>
     private void OnDrawGizmosSelected()
     {
         Vector2 center = (Vector2)transform.position + ZoneOffset;
         Gizmos.color = new Color(1f, 0.5f, 0f, 0.4f);
-        Gizmos.DrawWireCube(center, ZoneSize);
+        Vector2 size = ZonePrefab != null && ZonePrefab.TryGetComponent<BoxCollider2D>(out var box) ? box.size : ZoneSize;
+        Gizmos.DrawWireCube(center, size);
     }
 }

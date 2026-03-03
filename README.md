@@ -20,7 +20,8 @@ Components are extracted from real game development and tailored to typical scen
 │   ├── OneWayPlatformLandingFix.cs
 │   └── Abilities/
 │       ├── AbilityLedgeGrab2D.cs
-│       └── AbilityDownStrike.cs
+│       ├── AbilityDownStrike.cs
+│       └── StrikeZoneRunner.cs
 ├── Location/               # Level location randomization (loot caves)
 │   ├── LocationRandomizer.cs
 │   ├── LocationRandomizerConfig.cs
@@ -41,7 +42,8 @@ Components are extracted from real game development and tailored to typical scen
 
 - **OneWayPlatformLandingFix** — Fixes unrealistic upward speed when transitioning from a slope onto a one-way platform (prevents the character from “flying” at the junction). Attach to an object with `CorgiController`; spike threshold and clamp speed are configurable in the Inspector.
 - **AbilityLedgeGrab2D** — **Ledge grab** ability: detects wall edge, hang, climb on W/Up. Configurable layers, raycast distances, offsets, cooldown, and options (e.g. only when falling, ignore wall under feet). Add via menu: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
-- **AbilityDownStrike** — **Downward strike** ability: in the air, trigger a strike below (key or stick down). Spawns a hitbox zone (BoxCollider2D) so you can shape it in the Inspector; waits a few frames (DelayFrames) so visuals can render, then applies damage to all targets in the zone (each Health once) and applies bounce once to avoid duplicating the effect. Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
+- **AbilityDownStrike** — **Downward strike** ability: in the air, trigger a strike below (key or stick down). Uses shared **StrikeZoneRunner** (zone → delay → resolve hits → callback). Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
+- **StrikeZoneRunner** — **Shared strike logic** (static): spawn hitbox zone, wait N frames, resolve all hits (damage each Health once), then invoke callback so the ability applies effect once (e.g. bounce). Reuse for down strike, forward strike, upward strike, etc., without duplicating zone/delay/resolve code.
 
 ### Location Randomizer
 
