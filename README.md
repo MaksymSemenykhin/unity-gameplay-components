@@ -24,7 +24,6 @@ Components are extracted from real game development and tailored to typical scen
 │       └── StrikeZoneRunner.cs
 ├── Location/               # Level location randomization (loot caves)
 │   ├── LocationRandomizer.cs
-│   ├── LocationRandomizerConfig.cs
 │   └── README.md
 ├── Telegraph/              # Attack/ability telegraph system
 │   ├── TelegraphProgressController
