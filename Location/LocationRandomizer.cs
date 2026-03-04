@@ -54,6 +54,16 @@ public class LocationRandomizer : MonoBehaviour, MMEventListener<CorgiEngineEven
     [Tooltip("When spreadOverFrames is true, spawn this many caves per frame (1 = smoothest, higher = faster finish).")]
     [SerializeField] private int cavesPerFrame = 1;
 
+    [Header("BlueGate - GreenGate")]
+    [Tooltip("If true, spawn one room per BlueGate and link each room's GreenGate to the corresponding BlueGate.")]
+    [SerializeField] private bool useBlueGateCount;
+    [Tooltip("BlueGate objects on the map (fill by hand). Count = how many rooms to spawn.")]
+    [SerializeField] private Transform[] blueGates = new Transform[0];
+    [Tooltip("Prefab of the room (must contain a child with GreenGate name). If not set, first from Config/Cave Entries is used.")]
+    [SerializeField] private GameObject roomPrefabWithGreenGate;
+    [Tooltip("Name of the GreenGate object inside the room prefab (searched in hierarchy).")]
+    [SerializeField] private string greenGateObjectName = "GreenGate";
+
     [Header("Debug")]
     [Tooltip("Log spawn count and elapsed time (seconds + ms) when randomization finishes. Uses real time (unaffected by time scale).")]
     [SerializeField] private bool logLoadTime;
@@ -90,7 +100,7 @@ public class LocationRandomizer : MonoBehaviour, MMEventListener<CorgiEngineEven
     /// </summary>
     public void RunRandomization()
     {
-        var toSpawn = CollectSpawnList();
+        var (toSpawn, blueGates) = CollectSpawnList();
         if (toSpawn == null)
         {
             Debug.LogWarning("[LocationRandomizer] No cave entries: assign Config or fill Cave Entries.", this);
@@ -108,17 +118,59 @@ public class LocationRandomizer : MonoBehaviour, MMEventListener<CorgiEngineEven
 
         if (spreadOverFrames && gameObject.activeInHierarchy)
         {
-            StartCoroutine(SpawnOverFrames(toSpawn, count, startTime));
+            StartCoroutine(SpawnOverFrames(toSpawn, blueGates, count, startTime));
         }
         else
         {
-            SpawnAll(toSpawn);
+            SpawnAll(toSpawn, blueGates);
             LogLoadTime(count, startTime);
             BroadcastLocationsSpawned();
         }
     }
 
-    private List<(GameObject prefab, Vector2 position)> CollectSpawnList()
+    private (List<(GameObject prefab, Vector2 position)> toSpawn, IReadOnlyList<Transform> blueGatesOut) CollectSpawnList()
+    {
+        if (useBlueGateCount)
+            return CollectSpawnListByBlueGates();
+
+        var list = CollectSpawnListLegacy();
+        return (list, null);
+    }
+
+    private (List<(GameObject prefab, Vector2 position)>, IReadOnlyList<Transform>) CollectSpawnListByBlueGates()
+    {
+        var blueGatesList = new List<Transform>();
+        if (blueGates != null)
+        {
+            foreach (var t in blueGates)
+                if (t != null) blueGatesList.Add(t);
+        }
+
+        int n = blueGatesList.Count;
+        if (n == 0)
+        {
+            Debug.LogWarning("[LocationRandomizer] Use Blue Gate Count is on but BlueGates array is empty. Assign BlueGate transforms.", this);
+            return (new List<(GameObject prefab, Vector2 position)>(), blueGatesList);
+        }
+
+        var prefab = roomPrefabWithGreenGate;
+        if (prefab == null && config != null && config.CaveEntries.Count > 0)
+            prefab = config.CaveEntries[0].prefab;
+        if (prefab == null && caveEntries != null && caveEntries.Count > 0)
+            prefab = caveEntries[0].prefab;
+        if (prefab == null)
+        {
+            Debug.LogWarning("[LocationRandomizer] Use Blue Gate Count is on but no room prefab: set Room Prefab With Green Gate or add cave entries.", this);
+            return (new List<(GameObject prefab, Vector2 position)>(), blueGatesList);
+        }
+
+        var list = new List<(GameObject prefab, Vector2 position)>();
+        for (int i = 0; i < n; i++)
+            list.Add((prefab, firstSpawnPosition + spawnStepPerCave * i));
+        return (list, blueGatesList);
+    }
+
+    private List<(GameObject prefab, Vector2 position)> CollectSpawnListLegacy()
     {
         if (config != null && config.CaveEntries.Count > 0)
             return CollectFrom(config.CaveEntries);
@@ -160,13 +212,41 @@ public class LocationRandomizer : MonoBehaviour, MMEventListener<CorgiEngineEven
         return list;
     }
 
-    private void SpawnAll(List<(GameObject prefab, Vector2 position)> toSpawn)
+    private void SpawnAll(List<(GameObject prefab, Vector2 position)> toSpawn, IReadOnlyList<Transform> blueGatesOut)
     {
-        foreach (var (prefab, position) in toSpawn)
-            Instantiate(prefab, position, Quaternion.identity, transform);
+        for (int i = 0; i < toSpawn.Count; i++)
+        {
+            var (prefab, position) = toSpawn[i];
+            var instance = Instantiate(prefab, position, Quaternion.identity, transform);
+            if (blueGatesOut != null && i < blueGatesOut.Count)
+                LinkRoomGreenGateToBlueGate(instance, blueGatesOut[i]);
+        }
     }
 
-    private IEnumerator SpawnOverFrames(List<(GameObject prefab, Vector2 position)> toSpawn, int count, float startTime)
+    private void LinkRoomGreenGateToBlueGate(GameObject roomInstance, Transform blueGate)
+    {
+        var greenGateTransform = FindInChildrenByName(roomInstance.transform, greenGateObjectName);
+        if (greenGateTransform == null)
+        {
+            Debug.LogWarning($"[LocationRandomizer] Room prefab has no child named \"{greenGateObjectName}\". Check hierarchy or Green Gate Object Name.", roomInstance);
+            return;
+        }
+        greenGateTransform.SendMessage("SetLinkedGate", blueGate, SendMessageOptions.DontRequireReceiver);
+        blueGate.SendMessage("SetLinkedGate", greenGateTransform, SendMessageOptions.DontRequireReceiver);
+    }
+
+    private static Transform FindInChildrenByName(Transform root, string name)
+    {
+        if (root.name == name) return root;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            var found = FindInChildrenByName(root.GetChild(i), name);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    private IEnumerator SpawnOverFrames(List<(GameObject prefab, Vector2 position)> toSpawn, IReadOnlyList<Transform> blueGatesOut, int count, float startTime)
     {
         int perFrame = Mathf.Max(1, cavesPerFrame);
         for (int i = 0; i < toSpawn.Count; i += perFrame)
@@ -175,7 +255,9 @@ public class LocationRandomizer : MonoBehaviour, MMEventListener<CorgiEngineEven
             for (int j = i; j < end; j++)
             {
                 var (prefab, position) = toSpawn[j];
-                Instantiate(prefab, position, Quaternion.identity, transform);
+                var instance = Instantiate(prefab, position, Quaternion.identity, transform);
+                if (blueGatesOut != null && j < blueGatesOut.Count)
+                    LinkRoomGreenGateToBlueGate(instance, blueGatesOut[j]);
             }
             yield return null;
         }
