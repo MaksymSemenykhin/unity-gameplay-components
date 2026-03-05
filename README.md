@@ -21,7 +21,8 @@ Components are extracted from real game development and tailored to typical scen
 │   └── Abilities/
 │       ├── AbilityLedgeGrab2D.cs
 │       ├── AbilityDownStrike.cs
-│       └── StrikeZoneRunner.cs
+│       ├── StrikeZoneRunner.cs
+│       └── DownStrikeResponse.cs
 ├── Location/               # Level location randomization (loot caves)
 │   ├── LocationRandomizer.cs
 │   └── README.md
@@ -41,8 +42,9 @@ Components are extracted from real game development and tailored to typical scen
 
 - **OneWayPlatformLandingFix** — Fixes unrealistic upward speed when transitioning from a slope onto a one-way platform (prevents the character from “flying” at the junction). Attach to an object with `CorgiController`; spike threshold and clamp speed are configurable in the Inspector.
 - **AbilityLedgeGrab2D** — **Ledge grab** ability: detects wall edge, hang, climb on W/Up. Configurable layers, raycast distances, offsets, cooldown, and options (e.g. only when falling, ignore wall under feet). Add via menu: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
-- **AbilityDownStrike** — **Downward strike** ability: in the air, trigger a strike below (key or stick down). Uses shared **StrikeZoneRunner** (zone → delay → resolve hits → callback). Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
-- **StrikeZoneRunner** — **Shared strike logic** (static): spawn hitbox zone, wait N frames, resolve all hits (damage each Health once), then invoke callback so the ability applies effect once (e.g. bounce). Reuse for down strike, forward strike, upward strike, etc., without duplicating zone/delay/resolve code.
+- **AbilityDownStrike** — **Downward strike** ability: in the air, trigger a strike below (Down + left click). Bounce force can be set **per hit object** via **StrikeResponse**. Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
+- **DownStrikeResponse** — Response to **downward** strike only. Attach to strikeable objects (with Health); sets **BounceForce** for that object. For side/forward strikes use other response components. If absent, ability's default is used.
+- **StrikeZoneRunner** — **Shared strike logic** (static): spawn hitbox zone, wait N frames, resolve all hits (damage each Health once), then invoke callback with per-hit effect. The ability supplies a delegate (e.g. read DownStrikeResponse for bounce); runner stays generic for down/forward/etc. strikes.
 
 ### Location Randomizer
 

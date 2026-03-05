@@ -33,7 +33,7 @@ public class AbilityDownStrike : CharacterAbility
     public float DamageAmount = 10f;
     [Tooltip("Invincibility duration (seconds) given to the target after damage.")]
     public float TargetInvincibilityDuration = 0.5f;
-    [Tooltip("Upward force applied to the character on successful hit (once, even with multiple targets).")]
+    [Tooltip("Default upward force when hit object has no DownStrikeResponse. Objects with DownStrikeResponse override this per-object.")]
     public float BounceForce = 12f;
 
     [Header("Cooldown")]
@@ -43,6 +43,7 @@ public class AbilityDownStrike : CharacterAbility
     private float _lastStrikeTime = -999f;
     private bool _strikeInProgress;
 
+    /// <inheritdoc />
     public override void ProcessAbility()
     {
         base.ProcessAbility();
@@ -66,19 +67,38 @@ public class AbilityDownStrike : CharacterAbility
             TargetInvincibilityDuration,
             gameObject,
             Vector3.down,
+            GetBounceFromHit,
             OnStrikeResolved,
             ZonePrefab);
     }
 
-    private void OnStrikeResolved(bool anyHit)
+    /// <summary>
+    /// Callback from StrikeZoneRunner when the strike zone has been resolved (damage applied).
+    /// Applies bounce force from the hit object(s) and clears the strike-in-progress flag.
+    /// </summary>
+    /// <param name="anyHit">True if at least one target was hit and damaged.</param>
+    /// <param name="bounceForce">Max bounce force from hit objects (DownStrikeResponse or default). 0 if no hit.</param>
+    private void OnStrikeResolved(bool anyHit, float bounceForce)
     {
-        if (anyHit)
-            _controller.SetVerticalForce(BounceForce);
+        if (anyHit && bounceForce > 0f)
+            _controller.SetVerticalForce(bounceForce);
         _strikeInProgress = false;
     }
 
     /// <summary>
-    /// True when the player just pressed left mouse button while also holding Down (key or stick).
+    /// Returns the bounce force for the given hit object. Used by StrikeZoneRunner (getEffectFromHit).
+    /// Reads DownStrikeResponse on the object or its parent; otherwise returns the ability's default BounceForce.
+    /// </summary>
+    /// <param name="hitObject">GameObject that was hit (has Health).</param>
+    /// <returns>Bounce force to apply when striking this object from above.</returns>
+    private float GetBounceFromHit(GameObject hitObject)
+    {
+        var response = hitObject.GetComponent<DownStrikeResponse>() ?? hitObject.GetComponentInParent<DownStrikeResponse>();
+        return response != null ? response.BounceForce : BounceForce;
+    }
+
+    /// <summary>
+    /// True when the player just pressed left mouse button while holding Down (key or stick).
     /// </summary>
     private bool DownStrikeInput()
     {
@@ -89,6 +109,9 @@ public class AbilityDownStrike : CharacterAbility
         return downHeld;
     }
 
+    /// <summary>
+    /// Draws the strike zone in the editor when this component is selected.
+    /// </summary>
     private void OnDrawGizmosSelected()
     {
         Vector2 center = (Vector2)transform.position + ZoneOffset;
