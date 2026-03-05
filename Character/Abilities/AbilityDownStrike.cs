@@ -2,16 +2,14 @@ using UnityEngine;
 using MoreMountains.CorgiEngine;
 
 /// <summary>
-/// Downward strike ability: in the air, trigger a strike below by pressing the strike button together with Down.
+/// Downward strike ability: in the air, trigger a strike below by holding Down and pressing left mouse button.
 /// Uses StrikeZoneRunner for shared zone/delay/resolve logic; applies bounce once on any hit.
 /// </summary>
 [AddComponentMenu("Corgi Engine/Character/Abilities/Ability Down Strike")]
 public class AbilityDownStrike : CharacterAbility
 {
     [Header("Input")]
-    [Tooltip("Key that triggers the strike (e.g. Attack / J). Strike only fires when this is pressed together with Down.")]
-    public KeyCode StrikeButton = KeyCode.J;
-    [Tooltip("Key that must be held for Down (e.g. S or DownArrow).")]
+    [Tooltip("Key that must be held for Down (e.g. S or DownArrow). Strike fires on left mouse click while this is held.")]
     public KeyCode DownKey = KeyCode.S;
     [Tooltip("When using stick: PrimaryMovement.y below this counts as Down held.")]
     public float MovementDownThreshold = -0.5f;
@@ -80,12 +78,11 @@ public class AbilityDownStrike : CharacterAbility
     }
 
     /// <summary>
-    /// True when the player just pressed the strike button while also holding Down (key or stick).
+    /// True when the player just pressed left mouse button while also holding Down (key or stick).
     /// </summary>
     private bool DownStrikeInput()
     {
-        bool strikePressed = StrikeButton != KeyCode.None && Input.GetKeyDown(StrikeButton);
-        if (!strikePressed) return false;
+        if (!Input.GetMouseButtonDown(0)) return false;
 
         bool downHeld = (DownKey != KeyCode.None && Input.GetKey(DownKey))
                        || _inputManager.PrimaryMovement.y < MovementDownThreshold;

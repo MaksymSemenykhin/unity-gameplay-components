@@ -9,6 +9,8 @@ public class AbilityLedgeGrab2D : CharacterAbility
     public float WallCheckDistance = 0.25f;
     public float HeadClearanceHeight = 1.2f;
     public float TopDownCheckDistance = 2.4f;
+    [Tooltip("Max vertical distance between wall hit and ledge top (rejects when top is far above/below wall). 0 = disabled.")]
+    public float MaxWallToLedgeVerticalDistance = 0.25f;
 
     [Header("Raycast Offsets")] public Vector2 WallRayOriginOffset = new Vector2(0.2f, 0.2f);
     public Vector2 TopRayOriginOffset = new Vector2(0.2f, 1f);
@@ -26,6 +28,10 @@ public class AbilityLedgeGrab2D : CharacterAbility
     public float MinAirTimeBeforeGrab = 0.2f;
     [Tooltip("Don't grab the same object we were standing on (e.g. corner of current platform).")]
     public bool IgnoreWallIfSameAsStandingOn = true;
+    [Tooltip("Min absolute X of wall hit normal (reject floors/ceilings; only grab vertical walls). 0 = disabled.")]
+    [Range(0f, 1f)] public float MinWallNormalX = 0.7f;
+    [Tooltip("If true, ledge top must be on the same object as the wall (avoids grab on two separate colliders meeting).")]
+    public bool RequireSameColliderForWallAndLedge = true;
     public KeyCode ClimbKey = KeyCode.W;
     public KeyCode ClimbUpKey = KeyCode.UpArrow;
 
@@ -94,6 +100,9 @@ public class AbilityLedgeGrab2D : CharacterAbility
         if (!wallHit)
             return;
 
+        if (MinWallNormalX > 0f && Mathf.Abs(wallHit.normal.x) < MinWallNormalX)
+            return;
+
         if (IgnoreWallIfSameAsStandingOn && _controller.StandingOnLastFrame != null &&
             wallHit.collider != null && wallHit.collider.gameObject == _controller.StandingOnLastFrame)
             return;
@@ -126,6 +135,14 @@ public class AbilityLedgeGrab2D : CharacterAbility
         Debug.DrawRay(topOrigin, Vector2.down * TopDownCheckDistance, Color.red);
 
         if (!topHit)
+            return;
+
+        if (RequireSameColliderForWallAndLedge &&
+            (wallHit.collider == null || topHit.collider == null || wallHit.collider != topHit.collider))
+            return;
+
+        if (MaxWallToLedgeVerticalDistance > 0f &&
+            Mathf.Abs(wallHit.point.y - topHit.point.y) > MaxWallToLedgeVerticalDistance)
             return;
 
         if (topHit.point.y < transform.position.y + 0.1f)

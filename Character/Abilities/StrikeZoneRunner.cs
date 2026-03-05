@@ -29,9 +29,11 @@ public static class StrikeZoneRunner
         Action<bool> onResolved,
         GameObject zonePrefab = null)
     {
-        if (runner == null || onResolved == null) return;
+        if (runner == null) return;
+        Debug.Log("Running StrikeZone");
         Transform zoneParent = instigator != null ? instigator.transform.parent : null;
-        runner.StartCoroutine(Routine(zoneCenter, zoneSize, zoneParent, strikeableLayers, delayFrames, damageAmount, invincibilityDuration, instigator, damageDirection, onResolved, zonePrefab));
+        runner.StartCoroutine(Routine(zoneCenter, zoneSize, zoneParent, strikeableLayers, delayFrames, damageAmount,
+            invincibilityDuration, instigator, damageDirection, onResolved, zonePrefab));
     }
 
     private static IEnumerator Routine(
@@ -50,9 +52,12 @@ public static class StrikeZoneRunner
         GameObject zone = zonePrefab != null
             ? UnityEngine.Object.Instantiate(zonePrefab, zoneCenter, Quaternion.identity, zoneParent)
             : CreateZone(zoneCenter, zoneSize, zoneParent);
+        Debug.Log("Running Routine 1");
 
         for (int i = 0; i < delayFrames; i++)
             yield return null;
+        Debug.Log("Running Routine 2");
+
 
         Vector2 checkCenter = zoneCenter;
         Vector2 checkSize = zoneSize;
@@ -66,6 +71,7 @@ public static class StrikeZoneRunner
                 checkSize = box.bounds.size;
                 checkAngle = zone.transform.eulerAngles.z;
             }
+
             UnityEngine.Object.Destroy(zone);
         }
 
@@ -78,7 +84,7 @@ public static class StrikeZoneRunner
             if (col == null) continue;
             Health health = col.GetComponent<Health>();
             if (health == null) health = col.GetComponentInParent<Health>();
-            if (health == null || !damaged.Add(health) || !health.CanTakeDamageThisFrame) continue;
+            if (health == null || !damaged.Add(health) || !health.CanTakeDamageThisFrame()) continue;
             health.Damage(damageAmount, instigator, invincibilityDuration, invincibilityDuration, damageDirection);
             anyHit = true;
         }
