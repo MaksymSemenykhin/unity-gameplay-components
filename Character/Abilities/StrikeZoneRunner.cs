@@ -5,16 +5,13 @@ using UnityEngine;
 using MoreMountains.CorgiEngine;
 
 /// <summary>
-/// Shared logic for strike abilities: spawn a hitbox zone, wait N frames, resolve all hits
-/// (damage each Health once), then invoke a callback so the ability can apply effect once (e.g. bounce).
-/// Reuse for down strike, forward strike, upward strike, etc.
+/// Shared strike logic: spawn zone, wait N frames, resolve hits (effect per object via getEffectFromHit, damage where Health present), then callback.
+/// Use <see cref="GetBounceFromHit"/> for down-strike bounce; other strikes pass their own delegate.
 /// </summary>
 public static class StrikeZoneRunner
 {
     /// <summary>
-    /// Runs the strike routine: spawns a zone, waits delayFrames, applies damage to all unique Health,
-    /// then calls onResolved(anyHit, effectValue). effectValue is getEffectFromHit of the last hit object
-    /// (e.g. for down strike: bounce force from DownStrikeResponse; for forward strike: another effect).
+    /// Runs the strike routine: spawn zone, wait delayFrames, resolve hits (effect per object, damage where Health), then onResolved(anyHit, effect from last hit).
     /// </summary>
     /// <param name="runner">MonoBehaviour that starts the coroutine (typically the ability).</param>
     /// <param name="zoneCenter">World position of the zone center.</param>
@@ -25,7 +22,7 @@ public static class StrikeZoneRunner
     /// <param name="invincibilityDuration">Invincibility duration passed to Health.Damage.</param>
     /// <param name="instigator">GameObject that caused the strike (e.g. the character).</param>
     /// <param name="damageDirection">Direction passed to Health.Damage.</param>
-    /// <param name="getEffectFromHit">Called per hit object; return the effect value (e.g. bounce force). Ability defines which component to read (DownStrikeResponse, forward strike response, etc.).</param>
+    /// <param name="getEffectFromHit">Called per hit object; returns effect value (e.g. bounce). Use <see cref="GetBounceFromHit"/> for down strike.</param>
     /// <param name="onResolved">Called when done: (anyHit, effectValue from last hit).</param>
     /// <param name="zonePrefab">If set, instantiate this prefab at zoneCenter; zone must have a BoxCollider2D. If null, a procedural box is created using zoneSize.</param>
     public static void Run(
@@ -49,7 +46,19 @@ public static class StrikeZoneRunner
     }
 
     /// <summary>
-    /// Coroutine: spawn zone, wait delayFrames, resolve hits (damage + effect from last hit), invoke onResolved.
+    /// Bounce force for downward strike: <see cref="DownStrikeResponse"/> on hit object or parent, otherwise defaultBounce.
+    /// </summary>
+    /// <param name="hitObject">GameObject that was hit (may have no Health).</param>
+    /// <param name="defaultBounce">Used when hit object has no DownStrikeResponse.</param>
+    /// <returns>Bounce force to apply.</returns>
+    public static float GetBounceFromHit(GameObject hitObject, float defaultBounce)
+    {
+        var response = hitObject.GetComponent<DownStrikeResponse>() ?? hitObject.GetComponentInParent<DownStrikeResponse>();
+        return response != null ? response.BounceForce : defaultBounce;
+    }
+
+    /// <summary>
+    /// Coroutine: spawn zone, wait delayFrames, resolve hits (effect from each, damage where Health present), invoke onResolved.
     /// </summary>
     private static IEnumerator Routine(
         Vector2 zoneCenter,
@@ -96,12 +105,12 @@ public static class StrikeZoneRunner
         foreach (Collider2D col in hits)
         {
             if (col == null) continue;
+            anyHit = true;
+            if (getEffectFromHit != null)
+                effect = getEffectFromHit(col.gameObject);
             Health health = col.GetComponent<Health>() ?? col.GetComponentInParent<Health>();
             if (health == null || !damaged.Add(health) || !health.CanTakeDamageThisFrame()) continue;
             health.Damage(damageAmount, instigator, invincibilityDuration, invincibilityDuration, damageDirection);
-            anyHit = true;
-            if (getEffectFromHit != null)
-                effect = getEffectFromHit(health.gameObject);
         }
 
         onResolved(anyHit, effect);

@@ -2,8 +2,7 @@ using UnityEngine;
 using MoreMountains.CorgiEngine;
 
 /// <summary>
-/// Downward strike ability: in the air, trigger a strike below by holding Down and pressing left mouse button.
-/// Uses StrikeZoneRunner for shared zone/delay/resolve logic; applies bounce once on any hit.
+/// Downward strike: in the air, strike below (Down + left click). Uses <see cref="StrikeZoneRunner"/>; bounce from <see cref="DownStrikeResponse"/> or default.
 /// </summary>
 [AddComponentMenu("Corgi Engine/Character/Abilities/Ability Down Strike")]
 public class AbilityDownStrike : CharacterAbility
@@ -33,7 +32,7 @@ public class AbilityDownStrike : CharacterAbility
     public float DamageAmount = 10f;
     [Tooltip("Invincibility duration (seconds) given to the target after damage.")]
     public float TargetInvincibilityDuration = 0.5f;
-    [Tooltip("Default upward force when hit object has no DownStrikeResponse. Objects with DownStrikeResponse override this per-object.")]
+    [Tooltip("Default bounce when hit object has no DownStrikeResponse.")]
     public float BounceForce = 12f;
 
     [Header("Cooldown")]
@@ -67,34 +66,21 @@ public class AbilityDownStrike : CharacterAbility
             TargetInvincibilityDuration,
             gameObject,
             Vector3.down,
-            GetBounceFromHit,
+            (go) => StrikeZoneRunner.GetBounceFromHit(go, BounceForce),
             OnStrikeResolved,
             ZonePrefab);
     }
 
     /// <summary>
-    /// Callback from StrikeZoneRunner when the strike zone has been resolved (damage applied).
-    /// Applies bounce force from the hit object(s) and clears the strike-in-progress flag.
+    /// Callback when the strike zone is resolved. Applies bounce and clears strike-in-progress.
     /// </summary>
-    /// <param name="anyHit">True if at least one target was hit and damaged.</param>
-    /// <param name="bounceForce">Max bounce force from hit objects (DownStrikeResponse or default). 0 if no hit.</param>
+    /// <param name="anyHit">True if at least one collider was in the zone.</param>
+    /// <param name="bounceForce">Effect from last hit (DownStrikeResponse or default).</param>
     private void OnStrikeResolved(bool anyHit, float bounceForce)
     {
         if (anyHit && bounceForce > 0f)
             _controller.SetVerticalForce(bounceForce);
         _strikeInProgress = false;
-    }
-
-    /// <summary>
-    /// Returns the bounce force for the given hit object. Used by StrikeZoneRunner (getEffectFromHit).
-    /// Reads DownStrikeResponse on the object or its parent; otherwise returns the ability's default BounceForce.
-    /// </summary>
-    /// <param name="hitObject">GameObject that was hit (has Health).</param>
-    /// <returns>Bounce force to apply when striking this object from above.</returns>
-    private float GetBounceFromHit(GameObject hitObject)
-    {
-        var response = hitObject.GetComponent<DownStrikeResponse>() ?? hitObject.GetComponentInParent<DownStrikeResponse>();
-        return response != null ? response.BounceForce : BounceForce;
     }
 
     /// <summary>
