@@ -13,7 +13,7 @@ public static class StrikeZoneRunner
 {
     /// <summary>
     /// Runs the strike routine: spawns a zone, waits delayFrames, applies damage to all unique Health,
-    /// then calls onResolved(anyHit, effectValue). effectValue is the max of getEffectFromHit(hitObject) per hit
+    /// then calls onResolved(anyHit, effectValue). effectValue is getEffectFromHit of the last hit object
     /// (e.g. for down strike: bounce force from DownStrikeResponse; for forward strike: another effect).
     /// </summary>
     /// <param name="runner">MonoBehaviour that starts the coroutine (typically the ability).</param>
@@ -26,7 +26,7 @@ public static class StrikeZoneRunner
     /// <param name="instigator">GameObject that caused the strike (e.g. the character).</param>
     /// <param name="damageDirection">Direction passed to Health.Damage.</param>
     /// <param name="getEffectFromHit">Called per hit object; return the effect value (e.g. bounce force). Ability defines which component to read (DownStrikeResponse, forward strike response, etc.).</param>
-    /// <param name="onResolved">Called when done: (anyHit, maxEffectValue).</param>
+    /// <param name="onResolved">Called when done: (anyHit, effectValue from last hit).</param>
     /// <param name="zonePrefab">If set, instantiate this prefab at zoneCenter; zone must have a BoxCollider2D. If null, a procedural box is created using zoneSize.</param>
     public static void Run(
         MonoBehaviour runner,
@@ -49,7 +49,7 @@ public static class StrikeZoneRunner
     }
 
     /// <summary>
-    /// Coroutine: spawn zone, wait delayFrames, resolve hits (damage + collect max effect), invoke onResolved.
+    /// Coroutine: spawn zone, wait delayFrames, resolve hits (damage + effect from last hit), invoke onResolved.
     /// </summary>
     private static IEnumerator Routine(
         Vector2 zoneCenter,
@@ -91,7 +91,7 @@ public static class StrikeZoneRunner
         Collider2D[] hits = Physics2D.OverlapBoxAll(checkCenter, checkSize, checkAngle, strikeableLayers);
 
         bool anyHit = false;
-        float maxEffect = 0f;
+        float effect = 0f;
         var damaged = new HashSet<Health>();
         foreach (Collider2D col in hits)
         {
@@ -101,13 +101,10 @@ public static class StrikeZoneRunner
             health.Damage(damageAmount, instigator, invincibilityDuration, invincibilityDuration, damageDirection);
             anyHit = true;
             if (getEffectFromHit != null)
-            {
-                float effect = getEffectFromHit(health.gameObject);
-                if (effect > maxEffect) maxEffect = effect;
-            }
+                effect = getEffectFromHit(health.gameObject);
         }
 
-        onResolved(anyHit, anyHit ? maxEffect : 0f);
+        onResolved(anyHit, effect);
     }
 
     /// <summary>
