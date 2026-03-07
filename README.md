@@ -18,6 +18,7 @@ Components are extracted from real game development and tailored to typical scen
 ```
 ├── Character/              # Character components
 │   ├── OneWayPlatformLandingFix.cs
+│   ├── ZoneTriggerSwitcher.cs
 │   └── Abilities/
 │       ├── AbilityLedgeGrab2D.cs
 │       ├── AbilityDownStrike.cs
@@ -45,6 +46,7 @@ Components are extracted from real game development and tailored to typical scen
 - **AbilityDownStrike** — **Downward strike**: in the air, strike below (Down + left click). Bounce per hit object via **DownStrikeResponse** or default. Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
 - **DownStrikeResponse** — Response to **downward** strike only. Attach to objects in the strike zone (with or without Health, e.g. bouncy platform). Sets **BounceForce**. For side/forward strikes use other response components.
 - **StrikeZoneRunner** — **Shared strike logic** (static): spawn zone, wait N frames, resolve hits (effect from getEffectFromHit, damage where Health present), callback (anyHit, effect). For down strike pass `GetBounceFromHit`; runner stays generic for other strike types.
+- **ZoneTriggerSwitcher** — **Zone trigger** (Collider2D, trigger): on Player enter/exit, enable or disable GameObjects and fade alpha (CanvasGroup or SpriteRenderer). Optional side filter (enter/exit from left or right only). Add via menu: *Gameplay → Zone Trigger Switcher*.
 
 ### Location Randomizer
 
