@@ -43,10 +43,10 @@ Components are extracted from real game development and tailored to typical scen
 
 - **OneWayPlatformLandingFix** — Fixes unrealistic upward speed when transitioning from a slope onto a one-way platform (prevents the character from “flying” at the junction). Attach to an object with `CorgiController`; spike threshold and clamp speed are configurable in the Inspector.
 - **AbilityLedgeGrab2D** — **Ledge grab** ability: detects wall edge, hang, climb on W/Up. Configurable layers, raycast distances, offsets, cooldown, and options (e.g. only when falling, ignore wall under feet). Add via menu: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
-- **AbilityDownStrike** — **Downward strike**: in the air, strike below (Down + left click). Bounce per hit object via **DownStrikeResponse** or default. Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
+- **AbilityDownStrike** — **Downward strike**: in the air, strike below (Down + left click). Bounce per hit object via **DownStrikeResponse** or default. Option **Reset Horizontal Speed On Bounce** (default on) zeroes horizontal speed before bounce so the bounce is always the same. Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
 - **DownStrikeResponse** — Response to **downward** strike only. Attach to objects in the strike zone (with or without Health, e.g. bouncy platform). Sets **BounceForce**. For side/forward strikes use other response components.
 - **StrikeZoneRunner** — **Shared strike logic** (static): spawn zone, wait N frames, resolve hits (effect from getEffectFromHit, damage where Health present), callback (anyHit, effect). For down strike pass `GetBounceFromHit`; runner stays generic for other strike types.
-- **ZoneTriggerSwitcher** — **Zone trigger** (Collider2D, trigger): on Player enter/exit, enable or disable GameObjects and fade alpha (CanvasGroup or SpriteRenderer). Optional side filter (enter/exit from left or right only). Add via menu: *Gameplay → Zone Trigger Switcher*.
+- **ZoneTriggerSwitcher** — **Zone trigger** (Collider2D, trigger): on Player enter/exit, enable or disable GameObjects and fade SpriteRenderer alpha. Optional side filter (enter/exit from left or right only). Add via menu: *Gameplay → Zone Trigger Switcher*.
 
 ### Location Randomizer
 

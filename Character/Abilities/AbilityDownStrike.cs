@@ -34,6 +34,8 @@ public class AbilityDownStrike : CharacterAbility
     public float TargetInvincibilityDuration = 0.5f;
     [Tooltip("Default bounce when hit object has no DownStrikeResponse.")]
     public float BounceForce = 12f;
+    [Tooltip("If true, set horizontal speed to 0 before applying bounce so the bounce is always the same (straight up). If false, horizontal run speed is preserved.")]
+    public bool ResetHorizontalSpeedOnBounce = true;
 
     [Header("Cooldown")]
     [Tooltip("Minimum time between strikes.")]
@@ -79,7 +81,11 @@ public class AbilityDownStrike : CharacterAbility
     private void OnStrikeResolved(bool anyHit, float bounceForce)
     {
         if (anyHit && bounceForce > 0f)
+        {
+            if (ResetHorizontalSpeedOnBounce)
+                _controller.SetHorizontalForce(0f);
             _controller.SetVerticalForce(bounceForce);
+        }
         _strikeInProgress = false;
     }
 
