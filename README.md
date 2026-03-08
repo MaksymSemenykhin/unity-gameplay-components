@@ -65,8 +65,8 @@ Character abilities, movement fixes, and zone triggers. Abilities folder: [Chara
 Components for surfaces and platforms (aligned with Corgi’s Environment concepts), plus trap zones. See [Environment/README.md](Environment/README.md) | [Environment/README.ru.md](Environment/README.ru.md).
 
 - **SurfaceModifierRestrictions** — Inherits Corgi **SurfaceModifier**. Add to a platform (Collider2D) to restrict characters on that surface: **Allow Jump** (default off) disables the jump ability via `PermitAbility(false)` while on the surface; permission is restored on exit and on component disable. Base friction and force still apply. Menu: *Gameplay → Surface Modifier Restrictions*.
-- **TrapZone** — Trap zone: on enter by an object with one of the configured trigger tags, spawns a telegraph prefab; optionally call `Play()` or let the prefab auto-start. Optional breakable trap (Break By: DownStrike / Direct / Both). Menu: *Gameplay → Environment → Trap Zone*.
-- **TrapHealth** — Extends Corgi **Health** for breakable traps: only accepts damage from the attack type set on **TrapZone** (down strike vs direct). On death calls **TrapZone.OnBroken()**. Use with **DownStrikeResponse** for bounce. Menu: *Gameplay → Environment → Trap Health*.
+- **TrapZone** — Trap zone: spawns a telegraph prefab when any trigger fires (enter by tag, on hit, on destroy); prefab controls how to start. Optional breakable: add **TrapHealth** (any damage breaks it). Menu: *Gameplay → Environment → Trap Zone*.
+- **TrapHealth** — Extends Corgi **Health** for traps: forwards all damage, notifies **TrapZone** on hit and on death. Use with **DownStrikeResponse** for bounce. Menu: *Gameplay → Environment → Trap Health*.
 
 ### Location Randomizer
 

@@ -65,8 +65,8 @@
 Компоненты для поверхностей и платформ (в духе Corgi Environment) и ловушки. Подробнее: [Environment/README.md](Environment/README.md) | [Environment/README.ru.md](Environment/README.ru.md).
 
 - **SurfaceModifierRestrictions** — Наследует Corgi **SurfaceModifier**. Добавляется на платформу (Collider2D), чтобы ограничить персонажей на этой поверхности: **Allow Jump** (по умолчанию выкл) отключает прыжок через `PermitAbility(false)` на поверхности; разрешение восстанавливается при выходе и при отключении компонента. Базовое трение и сила по-прежнему применяются. Меню: *Gameplay → Surface Modifier Restrictions*.
-- **TrapZone** — Ловушка: при входе объекта с одним из заданных тегов триггера спавнится префаб телеграфа; опционально вызов `Play()` или автостарт префаба. Опционально ломаемая ловушка (Break By: DownStrike / Direct / Both). Меню: *Gameplay → Environment → Trap Zone*.
-- **TrapHealth** — Наследует Corgi **Health** для ломаемых ловушек: принимает урон только от типа атаки, заданного в **TrapZone** (удар вниз или прямая). При смерти вызывает **TrapZone.OnBroken()**. Использовать с **DownStrikeResponse** для отскока. Меню: *Gameplay → Environment → Trap Health*.
+- **TrapZone** — Ловушка: спавнит префаб телеграфа при срабатывании триггера (вход по тегу, удар, уничтожение); старт задаётся префабом. Опционально ломаемая: добавить **TrapHealth** (любой урон ломает). Меню: *Gameplay → Environment → Trap Zone*.
+- **TrapHealth** — Наследует Corgi **Health** для ловушек: передаёт весь урон, уведомляет **TrapZone** при попадании и при смерти. Использовать с **DownStrikeResponse** для отскока. Меню: *Gameplay → Environment → Trap Health*.
 
 ### Location Randomizer (Рандомизатор локаций)
 

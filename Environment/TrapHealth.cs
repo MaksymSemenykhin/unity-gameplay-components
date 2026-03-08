@@ -3,7 +3,7 @@ using UnityEngine;
 using MoreMountains.CorgiEngine;
 
 /// <summary>
-/// Trap health with attack-type filter. Add to an object with a collider on the strike layer together with <see cref="DownStrikeResponse"/> for down strike.
+/// Health for a trap: forwards damage to base, notifies <see cref="TrapZone"/> on hit and on death. Add with <see cref="DownStrikeResponse"/> for bounce on down strike.
 /// Reference to <see cref="TrapZone"/> is set manually or looked up on the parent. On death calls <see cref="TrapZone.OnBroken"/>.
 /// </summary>
 [AddComponentMenu("Gameplay/Environment/Trap Health")]
@@ -18,10 +18,7 @@ public class TrapHealth : Health
             trapZone = GetComponent<TrapZone>() ?? GetComponentInParent<TrapZone>();
     }
 
-    /// <summary>
-    /// Accepts damage only if the attack type matches the trap setting (DownStrike / Direct / Both).
-    /// Down strike is detected by damageDirection (downward) and AbilityDownStrike on instigator.
-    /// </summary>
+    /// <summary>Applies damage and notifies TrapZone so it can trigger on hit if needed.</summary>
     public override void Damage(
         float damage,
         GameObject instigator,
@@ -30,28 +27,6 @@ public class TrapHealth : Health
         Vector3 damageDirection,
         List<TypedDamage> typedDamages = null)
     {
-        if (trapZone == null || !trapZone.IsBreakable)
-        {
-            base.Damage(damage, instigator, flickerDuration, invincibilityDuration, damageDirection, typedDamages);
-            return;
-        }
-
-        TrapZone.BreakBy breakBy = trapZone.BreakByMode;
-        if (breakBy == TrapZone.BreakBy.None)
-            return;
-
-        bool isDownStrike = IsDownStrike(instigator, damageDirection);
-
-        bool accept = breakBy switch
-        {
-            TrapZone.BreakBy.Both => true,
-            TrapZone.BreakBy.DownStrike => isDownStrike,
-            TrapZone.BreakBy.Direct => !isDownStrike,
-            _ => false
-        };
-
-        if (!accept) return;
-
         base.Damage(damage, instigator, flickerDuration, invincibilityDuration, damageDirection, typedDamages);
         trapZone?.NotifyHit();
     }
@@ -62,14 +37,5 @@ public class TrapHealth : Health
         if (trapZone != null)
             trapZone.OnBroken();
         base.Kill();
-    }
-
-    private static bool IsDownStrike(GameObject instigator, Vector3 damageDirection)
-    {
-        if (instigator == null) return false;
-        bool directionDown = damageDirection.y < -0.3f;
-        if (!directionDown) return false;
-        var downStrike = instigator.GetComponent<AbilityDownStrike>() ?? instigator.GetComponentInChildren<AbilityDownStrike>();
-        return downStrike != null;
     }
 }
