@@ -27,9 +27,11 @@
 │       ├── AbilityLedgeGrab2D.cs
 │       ├── AbilityDownStrike.cs
 │       ├── StrikeZoneRunner.cs
-│       └── DownStrikeResponse.cs
+│       ├── DownStrikeResponse.cs
+│       └── README.md
 ├── Environment/            # Модификаторы поверхностей (Corgi SurfaceModifier)
-│   └── SurfaceModifierRestrictions.cs
+│   ├── SurfaceModifierRestrictions.cs
+│   └── README.md
 ├── Location/               # Рандомизация локаций уровня (пещеры с лутом)
 │   ├── LocationRandomizer.cs
 │   └── README.md
@@ -47,7 +49,7 @@
 
 ### Character (Персонаж)
 
-Способности персонажа, исправления движения и зональные триггеры.
+Способности персонажа, исправления движения и зональные триггеры. Папка Abilities: [Character/Abilities/README.md](Character/Abilities/README.md) | [Character/Abilities/README.ru.md](Character/Abilities/README.ru.md).
 
 - **OneWayPlatformLandingFix** — Устраняет нереалистичную скорость вверх при переходе со склона на одностороннюю платформу (предотвращает «полёт» на стыке). Вешается на объект с `CorgiController`; порог шипов и ограничение скорости настраиваются в Inspector.
 - **AbilityLedgeGrab2D** — **Захват уступа**: обнаружение края стены, вис, подъём по W/Вверх. Настраиваются слои, дистанции рейкастов, смещения, откат и опции (например, только при падении, игнор стены под ногами). Добавление: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
@@ -58,7 +60,7 @@
 
 ### Environment (Окружение)
 
-Компоненты для поверхностей и платформ (в духе Corgi Environment).
+Компоненты для поверхностей и платформ (в духе Corgi Environment). Подробнее: [Environment/README.md](Environment/README.md) | [Environment/README.ru.md](Environment/README.ru.md).
 
 - **SurfaceModifierRestrictions** — Наследует Corgi **SurfaceModifier**. Добавляется на платформу (Collider2D), чтобы ограничить персонажей на этой поверхности: **Allow Jump** (по умолчанию выкл) отключает прыжок через `PermitAbility(false)` на поверхности; разрешение восстанавливается при выходе и при отключении компонента. Базовое трение и сила по-прежнему применяются. Меню: *Gameplay → Surface Modifier Restrictions*.
 

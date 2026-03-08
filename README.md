@@ -27,9 +27,11 @@ Components are extracted from real game development and tailored to typical scen
 │       ├── AbilityLedgeGrab2D.cs
 │       ├── AbilityDownStrike.cs
 │       ├── StrikeZoneRunner.cs
-│       └── DownStrikeResponse.cs
+│       ├── DownStrikeResponse.cs
+│       └── README.md
 ├── Environment/            # Surface / platform modifiers (Corgi SurfaceModifier)
-│   └── SurfaceModifierRestrictions.cs
+│   ├── SurfaceModifierRestrictions.cs
+│   └── README.md
 ├── Location/               # Level location randomization (loot caves)
 │   ├── LocationRandomizer.cs
 │   └── README.md
@@ -47,7 +49,7 @@ Components are extracted from real game development and tailored to typical scen
 
 ### Character
 
-Character abilities, movement fixes, and zone triggers.
+Character abilities, movement fixes, and zone triggers. Abilities folder: [Character/Abilities/README.md](Character/Abilities/README.md) | [Character/Abilities/README.ru.md](Character/Abilities/README.ru.md).
 
 - **OneWayPlatformLandingFix** — Fixes unrealistic upward speed when transitioning from a slope onto a one-way platform (prevents the character from “flying” at the junction). Attach to an object with `CorgiController`; spike threshold and clamp speed are configurable in the Inspector.
 - **AbilityLedgeGrab2D** — **Ledge grab** ability: detects wall edge, hang, climb on W/Up. Configurable layers, raycast distances, offsets, cooldown, and options (e.g. only when falling, ignore wall under feet). Add via menu: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
@@ -58,7 +60,7 @@ Character abilities, movement fixes, and zone triggers.
 
 ### Environment
 
-Components for surfaces and platforms (aligned with Corgi’s Environment concepts).
+Components for surfaces and platforms (aligned with Corgi’s Environment concepts). See [Environment/README.md](Environment/README.md) | [Environment/README.ru.md](Environment/README.ru.md).
 
 - **SurfaceModifierRestrictions** — Inherits Corgi **SurfaceModifier**. Add to a platform (Collider2D) to restrict characters on that surface: **Allow Jump** (default off) disables the jump ability via `PermitAbility(false)` while on the surface; permission is restored on exit and on component disable. Base friction and force still apply. Menu: *Gameplay → Surface Modifier Restrictions*.
 
