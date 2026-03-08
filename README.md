@@ -29,8 +29,10 @@ Components are extracted from real game development and tailored to typical scen
 │       ├── StrikeZoneRunner.cs
 │       ├── DownStrikeResponse.cs
 │       └── README.md
-├── Environment/            # Surface / platform modifiers (Corgi SurfaceModifier)
+├── Environment/            # Surface / platform modifiers, traps (Corgi SurfaceModifier)
 │   ├── SurfaceModifierRestrictions.cs
+│   ├── TrapZone.cs
+│   ├── TrapHealth.cs
 │   └── README.md
 ├── Location/               # Level location randomization (loot caves)
 │   ├── LocationRandomizer.cs
@@ -60,13 +62,15 @@ Character abilities, movement fixes, and zone triggers. Abilities folder: [Chara
 
 ### Environment
 
-Components for surfaces and platforms (aligned with Corgi’s Environment concepts). See [Environment/README.md](Environment/README.md) | [Environment/README.ru.md](Environment/README.ru.md).
+Components for surfaces and platforms (aligned with Corgi’s Environment concepts), plus trap zones. See [Environment/README.md](Environment/README.md) | [Environment/README.ru.md](Environment/README.ru.md).
 
 - **SurfaceModifierRestrictions** — Inherits Corgi **SurfaceModifier**. Add to a platform (Collider2D) to restrict characters on that surface: **Allow Jump** (default off) disables the jump ability via `PermitAbility(false)` while on the surface; permission is restored on exit and on component disable. Base friction and force still apply. Menu: *Gameplay → Surface Modifier Restrictions*.
+- **TrapZone** — Trap zone: on enter by an object with one of the configured trigger tags, spawns a telegraph prefab; optionally call `Play()` or let the prefab auto-start. Optional breakable trap (Break By: DownStrike / Direct / Both). Menu: *Gameplay → Environment → Trap Zone*.
+- **TrapHealth** — Extends Corgi **Health** for breakable traps: only accepts damage from the attack type set on **TrapZone** (down strike vs direct). On death calls **TrapZone.OnBroken()**. Use with **DownStrikeResponse** for bounce. Menu: *Gameplay → Environment → Trap Health*.
 
 ### Location Randomizer
 
-**Random sub-locations at level load:** loot caves (or other locations) are spawned from prefabs outside the main map. Spawn chance is set **per prefab** in the Inspector. See [Location/README.md](Location/README.md).
+**Random sub-locations at level load:** loot caves (or other locations) are spawned from prefabs outside the main map. Spawn chance is set **per prefab** in the Inspector. See [Location/README.md](Location/README.md) | [Location/README.ru.md](Location/README.ru.md).
 
 ### Telegraph System
 
@@ -75,7 +79,7 @@ Components for surfaces and platforms (aligned with Corgi’s Environment concep
 - **TelegraphProgressController** — Logic: phases (Idle → Telegraphing → Active → Finishing), progress 0…1, interrupt/cancel, optional reaction window with events.
 - **TelegraphProgressView_RectSprite** — Visualization: frame and fill (SpriteRenderer), scale by progress, color changes (telegraph / reaction / active), hide and fade out on finish.
 
-See [Telegraph/README.md](Telegraph/README.md) for details.
+See [Telegraph/README.md](Telegraph/README.md) | [Telegraph/README.ru.md](Telegraph/README.ru.md) for details.
 
 ---
 
