@@ -22,6 +22,10 @@ public class TrapZone : MonoBehaviour
     [Tooltip("Spawn position for the telegraph. If not set, this object's position is used.")]
     [SerializeField] private Transform telegraphSpawnPoint;
 
+    [Header("Damage")]
+    [Tooltip("Optional. Prefab spawned when the telegraph finishes (e.g. damage zone, hazard). Uses the same position and rotation as the telegraph.")]
+    [SerializeField] private GameObject damagePrefab;
+
     [Header("Behaviour")]
     [Tooltip("One-shot: after firing once, the trap does not activate again (until scene reload).")]
     [SerializeField] private bool oneShot = false;
@@ -68,7 +72,7 @@ public class TrapZone : MonoBehaviour
         return false;
     }
 
-    /// <summary>Spawns the telegraph prefab at the set position; the prefab controls when and how to start (e.g. autoPlayOnStart).</summary>
+    /// <summary>Spawns the telegraph prefab; on OnTelegraphComplete spawns damagePrefab, on OnFinished destroys the damage instance and optionally the telegraph.</summary>
     public void SpawnTelegraph()
     {
         if (telegraphPrefab == null) return;
@@ -76,13 +80,26 @@ public class TrapZone : MonoBehaviour
         Vector3 position = telegraphSpawnPoint != null ? telegraphSpawnPoint.position : transform.position;
         Quaternion rotation = telegraphSpawnPoint != null ? telegraphSpawnPoint.rotation : transform.rotation;
         GameObject instance = Instantiate(telegraphPrefab, position, rotation);
+        GameObject damageInstance = null;
 
         var controller = instance.GetComponent<TelegraphProgressController>();
-        if (controller != null && destroyTelegraphOnFinish)
+        if (controller != null)
         {
+            controller.OnTelegraphComplete += () =>
+            {
+                if (damagePrefab != null)
+                    damageInstance = Instantiate(damagePrefab, position, rotation);
+            };
+
             controller.OnFinished += () =>
             {
-                if (instance != null) Destroy(instance);
+                if (damageInstance != null)
+                {
+                    Destroy(damageInstance);
+                    damageInstance = null;
+                }
+                if (destroyTelegraphOnFinish && instance != null)
+                    Destroy(instance);
             };
         }
     }

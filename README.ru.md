@@ -33,6 +33,7 @@
 │   ├── SurfaceModifierRestrictions.cs
 │   ├── TrapZone.cs
 │   ├── TrapHealth.cs
+│   ├── DamageOnTouchOneShot.cs
 │   └── README.md
 ├── Location/               # Рандомизация локаций уровня (пещеры с лутом)
 │   ├── LocationRandomizer.cs
@@ -67,6 +68,7 @@
 - **SurfaceModifierRestrictions** — Наследует Corgi **SurfaceModifier**. Добавляется на платформу (Collider2D), чтобы ограничить персонажей на этой поверхности: **Allow Jump** (по умолчанию выкл) отключает прыжок через `PermitAbility(false)` на поверхности; разрешение восстанавливается при выходе и при отключении компонента. Базовое трение и сила по-прежнему применяются. Меню: *Gameplay → Surface Modifier Restrictions*.
 - **TrapZone** — Ловушка: спавнит префаб телеграфа при срабатывании триггера (вход по тегу, удар, уничтожение); старт задаётся префабом. Опционально ломаемая: добавить **TrapHealth** (любой урон ломает). Меню: *Gameplay → Environment → Trap Zone*.
 - **TrapHealth** — Наследует Corgi **Health** для ловушек: передаёт весь урон, уведомляет **TrapZone** при попадании и при смерти. Использовать с **DownStrikeResponse** для отскока. Меню: *Gameplay → Environment → Trap Health*.
+- **DamageOnTouchOneShot** — Наследует Corgi **DamageOnTouch**: после первого нанесения урона уничтожает этот GameObject. Для префабов урона ловушек (например TrapZone). Меню: *Gameplay → Environment → Damage On Touch One Shot*.
 
 ### Location Randomizer (Рандомизатор локаций)
 

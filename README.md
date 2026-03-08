@@ -33,6 +33,7 @@ Components are extracted from real game development and tailored to typical scen
 │   ├── SurfaceModifierRestrictions.cs
 │   ├── TrapZone.cs
 │   ├── TrapHealth.cs
+│   ├── DamageOnTouchOneShot.cs
 │   └── README.md
 ├── Location/               # Level location randomization (loot caves)
 │   ├── LocationRandomizer.cs
@@ -67,6 +68,7 @@ Components for surfaces and platforms (aligned with Corgi’s Environment concep
 - **SurfaceModifierRestrictions** — Inherits Corgi **SurfaceModifier**. Add to a platform (Collider2D) to restrict characters on that surface: **Allow Jump** (default off) disables the jump ability via `PermitAbility(false)` while on the surface; permission is restored on exit and on component disable. Base friction and force still apply. Menu: *Gameplay → Surface Modifier Restrictions*.
 - **TrapZone** — Trap zone: spawns a telegraph prefab when any trigger fires (enter by tag, on hit, on destroy); prefab controls how to start. Optional breakable: add **TrapHealth** (any damage breaks it). Menu: *Gameplay → Environment → Trap Zone*.
 - **TrapHealth** — Extends Corgi **Health** for traps: forwards all damage, notifies **TrapZone** on hit and on death. Use with **DownStrikeResponse** for bounce. Menu: *Gameplay → Environment → Trap Health*.
+- **DamageOnTouchOneShot** — Extends Corgi **DamageOnTouch**: destroys this GameObject after dealing damage once. Use for trap damage prefabs (e.g. TrapZone damage prefab). Menu: *Gameplay → Environment → Damage On Touch One Shot*.
 
 ### Location Randomizer
 
