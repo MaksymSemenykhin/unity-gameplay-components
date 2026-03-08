@@ -8,6 +8,14 @@ Spawns room/cave instances at level load from prefabs and optionally links them 
 
 ---
 
+## Files
+
+| File | Description |
+|------|-------------|
+| **LocationRandomizer.cs** | Spawns room/cave instances at level load; Legacy (per-prefab spawn chance) or BlueGate (one room per gate, gate linking). Run mode, spread over frames, events. |
+
+---
+
 ## Modes
 
 ### Legacy (Use Blue Gate Count = off)

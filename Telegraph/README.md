@@ -18,6 +18,15 @@ The system is built to integrate naturally with:
 
 ---
 
+## Components
+
+| File | Description |
+|------|-------------|
+| **TelegraphProgressController.cs** | **Telegraph runner**: lifecycle (Idle → Telegraphing → Active → Finishing), progress 0…1, interrupt/cancel, optional reaction window and events. No visuals; drive from abilities, AI, or code. |
+| **TelegraphProgressView_RectSprite.cs** | **Telegraph view**: frame and fill (SpriteRenderer), scale by progress, color transitions (telegraph / reaction / active), hide and fade on finish. Reacts to runner events. |
+
+---
+
 ## What is a Telegraph?
 
 A telegraph is a **visual warning** shown to the player before an action is executed.
