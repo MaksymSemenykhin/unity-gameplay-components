@@ -1,5 +1,9 @@
 # Unity Gameplay Components (Corgi Engine)
 
+[English](README.md) | [Русский](README.ru.md)
+
+---
+
 A collection of modular, reusable gameplay components for **Unity** projects using **[Corgi Engine](https://corgi-engine.moremountains.com/)**.
 
 Components are extracted from real game development and tailored to typical scenarios in Corgi Engine–based games.

@@ -1,5 +1,9 @@
 # Location Randomizer
 
+[English](README.md) | [Русский](README.ru.md)
+
+---
+
 Spawns room/cave instances at level load from prefabs and optionally links them to gates. Two modes: **Legacy** (per-prefab spawn chance, no gates) and **BlueGate** (one room per gate, random prefab without repeat, gate linking).
 
 ---

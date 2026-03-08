@@ -1,5 +1,9 @@
 # Telegraph System (Corgi Engine)
 
+[English](README.md) | [Русский](README.ru.md)
+
+---
+
 The Telegraph System is a reusable gameplay module designed primarily for
 **Corgi Engine–based Unity projects**.
 
