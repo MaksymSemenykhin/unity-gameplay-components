@@ -56,7 +56,7 @@ Character abilities, movement fixes, and zone triggers.
 
 Components for surfaces and platforms (aligned with Corgi’s Environment concepts).
 
-- **SurfaceModifierRestrictions** — Inherits Corgi **SurfaceModifier**. Add to a platform (Collider2D) to restrict characters on that surface: **Allow Jump** (default off) disables jumping (NumberOfJumps = 0) while on the surface; value is restored on exit and on component disable. Base friction and force still apply. Menu: *Gameplay → Surface Modifier Restrictions*.
+- **SurfaceModifierRestrictions** — Inherits Corgi **SurfaceModifier**. Add to a platform (Collider2D) to restrict characters on that surface: **Allow Jump** (default off) disables the jump ability via `PermitAbility(false)` while on the surface; permission is restored on exit and on component disable. Base friction and force still apply. Menu: *Gameplay → Surface Modifier Restrictions*.
 
 ### Location Randomizer
 
