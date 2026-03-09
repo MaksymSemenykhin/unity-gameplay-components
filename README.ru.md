@@ -24,6 +24,8 @@
 │   ├── OneWayPlatformLandingFix.cs
 │   ├── ZoneTriggerSwitcher.cs
 │   └── Abilities/
+│       ├── CharacterHorizontalMovementRunJump.cs
+│       ├── CharacterJumpRunSpeed.cs
 │       ├── AbilityLedgeGrab2D.cs
 │       ├── AbilityDownStrike.cs
 │       ├── StrikeZoneRunner.cs
@@ -55,6 +57,7 @@
 Способности персонажа, исправления движения и зональные триггеры. Папка Abilities: [Character/Abilities/README.md](Character/Abilities/README.md) | [Character/Abilities/README.ru.md](Character/Abilities/README.ru.md).
 
 - **OneWayPlatformLandingFix** — Устраняет нереалистичную скорость вверх при переходе со склона на одностороннюю платформу (предотвращает «полёт» на стыке). Вешается на объект с `CorgiController`; порог шипов и ограничение скорости настраиваются в Inspector.
+- **Jump speed** — Замените CharacterHorizontalMovement и CharacterJump на **CharacterHorizontalMovementRunJump** и **CharacterJumpRunSpeed** — прыжок с места = скорость бега.
 - **AbilityLedgeGrab2D** — **Захват уступа**: обнаружение края стены, вис, подъём по W/Вверх. Настраиваются слои, дистанции рейкастов, смещения, откат и опции (например, только при падении, игнор стены под ногами). Добавление: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
 - **AbilityDownStrike** — **Удар вниз**: в воздухе удар вниз (Вниз + левая кнопка). Отскок задаётся через **DownStrikeResponse** или по умолчанию. Опция **Reset Horizontal Speed On Bounce** (по умолчанию вкл.) обнуляет горизонтальную скорость перед отскоком. Добавление: *Corgi Engine → Character → Abilities → Ability Down Strike*.
 - **DownStrikeResponse** — Реакция только на **удар вниз**. Вешается на объекты в зоне удара (с Health или без, например платформа-отскок). Задаёт **BounceForce**. Для ударов вбок/вперёд — другие компоненты ответа.

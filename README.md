@@ -24,6 +24,8 @@ Components are extracted from real game development and tailored to typical scen
 │   ├── OneWayPlatformLandingFix.cs
 │   ├── ZoneTriggerSwitcher.cs
 │   └── Abilities/
+│       ├── CharacterHorizontalMovementRunJump.cs
+│       ├── CharacterJumpRunSpeed.cs
 │       ├── AbilityLedgeGrab2D.cs
 │       ├── AbilityDownStrike.cs
 │       ├── StrikeZoneRunner.cs
@@ -55,6 +57,7 @@ Components are extracted from real game development and tailored to typical scen
 Character abilities, movement fixes, and zone triggers. Abilities folder: [Character/Abilities/README.md](Character/Abilities/README.md) | [Character/Abilities/README.ru.md](Character/Abilities/README.ru.md).
 
 - **OneWayPlatformLandingFix** — Fixes unrealistic upward speed when transitioning from a slope onto a one-way platform (prevents the character from “flying” at the junction). Attach to an object with `CorgiController`; spike threshold and clamp speed are configurable in the Inspector.
+- **Jump speed** — Replace CharacterHorizontalMovement and CharacterJump with **CharacterHorizontalMovementRunJump** and **CharacterJumpRunSpeed** so jump from stand = run speed.
 - **AbilityLedgeGrab2D** — **Ledge grab** ability: detects wall edge, hang, climb on W/Up. Configurable layers, raycast distances, offsets, cooldown, and options (e.g. only when falling, ignore wall under feet). Add via menu: *Corgi Engine → Character → Abilities → Ability Ledge Grab 2D*.
 - **AbilityDownStrike** — **Downward strike**: in the air, strike below (Down + left click). Bounce per hit object via **DownStrikeResponse** or default. Option **Reset Horizontal Speed On Bounce** (default on) zeroes horizontal speed before bounce so the bounce is always the same. Add via menu: *Corgi Engine → Character → Abilities → Ability Down Strike*.
 - **DownStrikeResponse** — Response to **downward** strike only. Attach to objects in the strike zone (with or without Health, e.g. bouncy platform). Sets **BounceForce**. For side/forward strikes use other response components.

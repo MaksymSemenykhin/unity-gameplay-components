@@ -8,7 +8,14 @@ Corgi Engine–style **character abilities** and shared strike logic: ledge grab
 
 ---
 
-## Files
+## Jump speed (jump from stand = run speed)
+
+| File | Description |
+|------|-------------|
+| **CharacterHorizontalMovementRunJump.cs** | Inherits **CharacterHorizontalMovement**. JumpSpeed from **CharacterRun.RunSpeed**. When jumping (Jumping/DoubleJumping/WallJumping), MovementSpeed = JumpSpeed. **Replace** CharacterHorizontalMovement. |
+| **CharacterJumpRunSpeed.cs** | Inherits **CharacterJump**. When IsJumping, calls `ResetHorizontalSpeed` so JumpSpeed applies cleanly. Finds **CharacterHorizontalMovementRunJump** in Initialization. **Replace** CharacterJump. |
+
+## Other abilities
 
 | File | Description |
 |------|-------------|

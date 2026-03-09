@@ -8,7 +8,14 @@
 
 ---
 
-## Файлы
+## Jump speed (прыжок с места = скорость бега)
+
+| Файл | Описание |
+|------|----------|
+| **CharacterHorizontalMovementRunJump.cs** | Наследует **CharacterHorizontalMovement**. JumpSpeed из **CharacterRun.RunSpeed**. При прыжке (Jumping/DoubleJumping/WallJumping): MovementSpeed = JumpSpeed. **Замените** CharacterHorizontalMovement. |
+| **CharacterJumpRunSpeed.cs** | Наследует **CharacterJump**. При IsJumping вызывает `ResetHorizontalSpeed`, чтобы JumpSpeed применялась корректно. В Initialization ищет **CharacterHorizontalMovementRunJump**. **Замените** CharacterJump. |
+
+## Прочие способности
 
 | Файл | Описание |
 |------|----------|
